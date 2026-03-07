@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vitest/
+sbom.json
+sbom.xml
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.log

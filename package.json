@@ -1,0 +1,62 @@
+{
+  "name": "specdrive",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Spec package manager for Gherkin behavioral contracts",
+  "bin": {
+    "specdrive": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run tests/unit --reporter=verbose",
+    "test:watch": "vitest tests/unit",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --fix",
+    "coverage": "vitest run tests/unit --coverage --coverage.lines=96",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^3.0.0"
+  },
+  "keywords": [
+    "gherkin",
+    "bdd",
+    "spec",
+    "behavioral-contract",
+    "traceability",
+    "requirements",
+    "cucumber",
+    "feature-files",
+    "junit",
+    "test-management",
+    "contract-testing"
+  ],
+  "author": "Specdrive Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bryonjacob/specdrive.git"
+  },
+  "homepage": "https://github.com/bryonjacob/specdrive",
+  "bugs": {
+    "url": "https://github.com/bryonjacob/specdrive/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

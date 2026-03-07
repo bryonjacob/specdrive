@@ -1,0 +1,9 @@
+name: property-plugin-core
+version: 0.2.0
+description: 'Conformance contract for property-based testing plugins'
+extends:
+  - source: github:org/base-spec@v1.0.0
+omits:
+  - RID-LEGACY-017
+overrides:
+  - RID-BASE-005

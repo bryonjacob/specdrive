@@ -1,0 +1,5 @@
+specs:
+  - name: property-plugin-core
+    source: path:../property-plugin-spec
+  - name: auth-baseline
+    source: github:org/auth-specs@v1.2.0
