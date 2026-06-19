@@ -63,6 +63,33 @@ Feature: Built-in strategies
     expect(entries).toEqual([])
   })
 
+  it('assigns scenarioId per Scenario / Scenario Outline boundary', async () => {
+    const sidDir = join(tmpdir(), `specdrive-scan-sid-${Date.now()}`)
+    const specDir = join(sidDir, 'sid-spec')
+    await mkdir(specDir, { recursive: true })
+    await writeFile(
+      join(specDir, 'sid.feature'),
+      `Feature: Boundaries
+
+  @RID-SID-001
+  Scenario: First
+    Given a
+
+  @RID-SID-002
+  Scenario Outline: Second
+    Given <x>
+`
+    )
+
+    const entries = await scanFeatureFiles(sidDir, 'sid-spec')
+    const first = entries.find((e) => e.rid === 'RID-SID-001')
+    const second = entries.find((e) => e.rid === 'RID-SID-002')
+    // Tags sit before their scenario's boundary line, so the first scenario's
+    // tag carries id 0 and the second carries id 1 (after the first boundary).
+    expect(first?.scenarioId).toBe(0)
+    expect(second?.scenarioId).toBe(1)
+  })
+
   it('scans nested subdirectories', async () => {
     const nestedDir = join(tmpdir(), `specdrive-scan-nested-${Date.now()}`)
     const subDir = join(nestedDir, 'nested-spec', 'sub', 'deep')

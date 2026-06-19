@@ -66,10 +66,20 @@ async function checkInstalled(
   return { installed, missing }
 }
 
+/**
+ * A RID is a true duplicate only when the same tag is repeated WITHIN A
+ * SINGLE SCENARIO (no intervening `Scenario:` boundary). The requirement↔
+ * scenario relationship is many-to-many, so the same RID across distinct
+ * scenarios (or across files) is valid traceability, not an error.
+ *
+ * Grouping by `spec / file / scenarioId / rid` captures exactly that:
+ * same-scenario repeats collapse into one group; cross-scenario and
+ * cross-file occurrences land in separate groups.
+ */
 function findDuplicates(rids: RidEntry[]): RidEntry[][] {
   const ridMap = new Map<string, RidEntry[]>()
   for (const r of rids) {
-    const key = `${r.spec}/${r.rid}`
+    const key = `${r.spec}/${r.file}/${r.scenarioId}/${r.rid}`
     const list = ridMap.get(key) ?? []
     list.push(r)
     ridMap.set(key, list)

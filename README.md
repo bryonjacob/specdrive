@@ -61,6 +61,14 @@ Validate RID format, check for duplicates, and enumerate specs with counts.
 npx specdrive audit
 ```
 
+The requirement↔scenario relationship is many-to-many: one requirement (one RID)
+may be proven by several scenarios, and one scenario may cover several
+requirements. So the same RID across distinct scenarios — or across files — is
+valid traceability, not an error. `audit` flags a duplicate **only** when the
+same RID tag is repeated within a single scenario (no intervening `Scenario:` /
+`Scenario Outline:` boundary), which is a redundant tag with no traceability
+value.
+
 ### `specdrive verify`
 
 Cross-reference declared RIDs against a JUnit XML test report. Shows coverage percentage and lists uncovered RIDs with source locations.

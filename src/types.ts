@@ -65,12 +65,19 @@ export interface Lockfile {
 
 /**
  * A single RID occurrence found by scanning feature files.
+ *
+ * `scenarioId` is a per-file, monotonically increasing counter that
+ * increments at each `Scenario:` / `Scenario Outline:` line. Tags before
+ * the first scenario share id 0. Two occurrences of the same RID in the
+ * same file with the same `scenarioId` belong to one scenario and are a
+ * genuine duplicate; differing ids mean different scenarios (valid reuse).
  */
 export interface RidEntry {
   rid: string
   file: string
   line: number
   spec: string
+  scenarioId: number
 }
 
 /**

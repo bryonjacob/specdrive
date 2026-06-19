@@ -5,6 +5,9 @@ import { RID_TAG_RE } from './rid.js'
 import { walkFeatureFiles } from './fs-utils.js'
 import type { RidEntry } from './types.js'
 
+/** Match a Scenario / Scenario Outline boundary line. */
+const SCENARIO_RE = /^\s*(Scenario|Scenario Outline):/
+
 /**
  * Scan feature files under `baseDir/specName/` for @RID-* tags.
  */
@@ -14,23 +17,40 @@ export async function scanFeatureFiles(baseDir: string, specName: string): Promi
   const entries: RidEntry[] = []
 
   for (const file of files) {
-    const content = await readFile(file, 'utf-8')
-    const lines = content.split('\n')
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
-      let match: RegExpExecArray | null
-      RID_TAG_RE.lastIndex = 0
-      while ((match = RID_TAG_RE.exec(line)) !== null) {
-        entries.push({
-          rid: match[1],
-          file,
-          line: i + 1,
-          spec: specName,
-        })
-      }
-    }
+    entries.push(...scanContent(await readFile(file, 'utf-8'), file, specName))
   }
 
+  return entries
+}
+
+/**
+ * Extract @RID-* tags from one feature file's content, stamping each with a
+ * per-file `scenarioId`.
+ *
+ * A scenario owns both its preceding tag block and its body, so tags are
+ * buffered and attached to the upcoming scenario's id (flushed at each
+ * `Scenario:` boundary). Tags inside a scenario body share that same id. This
+ * is what lets dedup distinguish a same-scenario repeat (a tag above a
+ * scenario re-tagged in its body → same id → duplicate) from the same RID on
+ * two different scenarios (different ids → valid).
+ */
+function scanContent(content: string, file: string, specName: string): RidEntry[] {
+  const entries: RidEntry[] = []
+  const lines = content.split('\n')
+  // Tags between two `Scenario:` lines all belong to one scenario: the tag
+  // block precedes its scenario and the body follows it. So we open a new
+  // scenario id at each boundary and assign that id to every tag until the
+  // NEXT boundary. The first boundary closes the feature-level block (id 0).
+  let scenarioId = 0
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (SCENARIO_RE.test(line)) scenarioId++
+    let match: RegExpExecArray | null
+    RID_TAG_RE.lastIndex = 0
+    while ((match = RID_TAG_RE.exec(line)) !== null) {
+      entries.push({ rid: match[1], file, line: i + 1, spec: specName, scenarioId })
+    }
+  }
   return entries
 }
 

@@ -17,13 +17,13 @@ CLI tool with five commands (`init`, `install`, `audit`, `verify`, `status`). No
 - `src/types.ts` - All interfaces (SpecdriveConfig, SourceUri, SpecManifest, Lockfile, RidEntry, AuditResult)
 - `src/sources.ts` - URI parsing (path:, github:, gist:, git:) and clone URL generation
 - `src/config.ts` - Load/validate specdrive.yaml (`specs` and/or `localSpecs`)
-- `src/scan.ts` - Walk .feature files, extract @RID-\* tags with line numbers; `scanLocalSpecs()` for local spec dirs
+- `src/scan.ts` - Walk .feature files, extract @RID-\* tags with line numbers and a per-file `scenarioId` (incremented at each `Scenario:` / `Scenario Outline:` boundary, used by audit to distinguish same-scenario duplicates from cross-scenario reuse); `scanLocalSpecs()` for local spec dirs
 - `src/lockfile.ts` - Read/write .specdrive-lock.yaml
 - `src/resolve.ts` - Load spec.yaml manifests, apply extends/omits
 - `src/color.ts` - ANSI color utilities (fmt, pad, box), respects NO_COLOR and TTY detection
 - `src/rid.ts` - Centralized RID regex patterns (RID_TAG_RE, RID_RE, RID_FORMAT_RE)
 - `src/fs-utils.ts` - Shared filesystem utilities (fileExists, fileContains, walkFeatureFiles)
-- `src/audit.ts` - Audit logic: validate installed + local specs, RID format, duplicates
+- `src/audit.ts` - Audit logic: validate installed + local specs, RID format, duplicates. Duplicate detection is scenario-aware: the requirement↔scenario relationship is many-to-many, so the same RID on distinct scenarios (keyed by `spec/file/scenarioId/rid`) is valid; only a RID repeated within one scenario is an error.
 
 ### Commands
 
