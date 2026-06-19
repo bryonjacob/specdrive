@@ -17,7 +17,7 @@ CLI tool with five commands (`init`, `install`, `audit`, `verify`, `status`). No
 - `src/types.ts` - All interfaces (SpecdriveConfig, SourceUri, SpecManifest, Lockfile, RidEntry, AuditResult)
 - `src/sources.ts` - URI parsing (path:, github:, gist:, git:) and clone URL generation
 - `src/config.ts` - Load/validate specdrive.yaml (`specs` and/or `localSpecs`)
-- `src/scan.ts` - Walk .feature files, extract @RID-\* tags with line numbers and a per-file `scenarioId` (incremented at each `Scenario:` / `Scenario Outline:` boundary, used by audit to distinguish same-scenario duplicates from cross-scenario reuse); `scanLocalSpecs()` for local spec dirs
+- `src/scan.ts` - Walk .feature files, extract @RID-\* tags with line numbers and a per-file `scenarioId` (incremented at each `Scenario:` / `Scenario Outline:` boundary, used by audit to distinguish same-scenario duplicates from cross-scenario reuse); `scanLocalSpecs()` for local spec dirs. Tags are harvested only from genuine Gherkin tag lines (trimmed line of whitespace-separated `@`-tokens); RIDs in `#` comments or inside `"""` / ``` docstrings are intentionally ignored.
 - `src/lockfile.ts` - Read/write .specdrive-lock.yaml
 - `src/resolve.ts` - Load spec.yaml manifests, apply extends/omits
 - `src/color.ts` - ANSI color utilities (fmt, pad, box), respects NO_COLOR and TTY detection

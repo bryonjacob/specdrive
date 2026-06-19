@@ -8,6 +8,20 @@ import type { RidEntry } from './types.js'
 /** Match a Scenario / Scenario Outline boundary line. */
 const SCENARIO_RE = /^\s*(Scenario|Scenario Outline):/
 
+/** Docstring delimiters that open/close a step-argument block. */
+const DOCSTRING_DELIMS = new Set(['"""', '```'])
+
+/**
+ * A Gherkin tag line consists solely of whitespace-separated `@`-prefixed
+ * tokens. A line like `# directory (@RID-X)` is a comment (first token is
+ * `#`), and a step / table / docstring-body line never satisfies this. Only
+ * genuine tag lines are eligible to yield @RID tags.
+ */
+function isTagLine(trimmed: string): boolean {
+  if (!trimmed.startsWith('@')) return false
+  return trimmed.split(/\s+/).every((token) => token.startsWith('@'))
+}
+
 /**
  * Scan feature files under `baseDir/specName/` for @RID-* tags.
  */
@@ -33,6 +47,12 @@ export async function scanFeatureFiles(baseDir: string, specName: string): Promi
  * is what lets dedup distinguish a same-scenario repeat (a tag above a
  * scenario re-tagged in its body → same id → duplicate) from the same RID on
  * two different scenarios (different ids → valid).
+ *
+ * @RID tags are harvested ONLY from genuine Gherkin tag lines. RIDs mentioned
+ * in `#` comments, step text, table rows, or inside `"""` / ``` docstrings
+ * (including `//` comments in embedded source fixtures) are intentionally
+ * ignored — writing a RID in a provenance comment is normal practice, not a
+ * tag occurrence.
  */
 function scanContent(content: string, file: string, specName: string): RidEntry[] {
   const entries: RidEntry[] = []
@@ -42,12 +62,21 @@ function scanContent(content: string, file: string, specName: string): RidEntry[
   // scenario id at each boundary and assign that id to every tag until the
   // NEXT boundary. The first boundary closes the feature-level block (id 0).
   let scenarioId = 0
+  let inDocstring = false
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    if (SCENARIO_RE.test(line)) scenarioId++
+    const trimmed = lines[i].trim()
+    // A delimiter line toggles docstring state and yields nothing itself.
+    if (DOCSTRING_DELIMS.has(trimmed)) {
+      inDocstring = !inDocstring
+      continue
+    }
+    // Inside a docstring, no line is Gherkin — skip boundary and tag detection.
+    if (inDocstring) continue
+    if (SCENARIO_RE.test(lines[i])) scenarioId++
+    if (!isTagLine(trimmed)) continue
     let match: RegExpExecArray | null
     RID_TAG_RE.lastIndex = 0
-    while ((match = RID_TAG_RE.exec(line)) !== null) {
+    while ((match = RID_TAG_RE.exec(lines[i])) !== null) {
       entries.push({ rid: match[1], file, line: i + 1, spec: specName, scenarioId })
     }
   }

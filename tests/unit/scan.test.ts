@@ -90,6 +90,72 @@ Feature: Built-in strategies
     expect(second?.scenarioId).toBe(1)
   })
 
+  it('harvests @RID only from genuine tag lines, not comments or docstrings', async () => {
+    const dir = join(tmpdir(), `specdrive-scan-taglines-${Date.now()}`)
+    const specDir = join(dir, 'tl-spec')
+    await mkdir(specDir, { recursive: true })
+    await writeFile(
+      join(specDir, 'tl.feature'),
+      `Feature: Tag-line harvesting
+
+  # directory (@RID-COMMENT-001). This is a Gherkin comment, not a tag.
+  @RID-REAL-001 @RID-REAL-002
+  Scenario: Real tags above me
+    Given a step
+    """
+    // Sub-phase note (@RID-DOC-001) inside an embedded source fixture
+    @RID-DOC-002
+    """
+    Then done
+`
+    )
+
+    const rids = (await scanFeatureFiles(dir, 'tl-spec')).map((e) => e.rid).sort()
+    expect(rids).toEqual(['RID-REAL-001', 'RID-REAL-002'])
+  })
+
+  it('ignores a tag-line-shaped RID inside a docstring (docstring guard wins)', async () => {
+    const dir = join(tmpdir(), `specdrive-scan-docguard-${Date.now()}`)
+    const specDir = join(dir, 'dg-spec')
+    await mkdir(specDir, { recursive: true })
+    await writeFile(
+      join(specDir, 'dg.feature'),
+      `Feature: Docstring guard
+
+  @RID-REAL-001
+  Scenario: Has a docstring that looks like a tag line
+    Given a step
+    """
+    @RID-INSIDE-DOC-001
+    """
+    Then done
+`
+    )
+
+    const rids = (await scanFeatureFiles(dir, 'dg-spec')).map((e) => e.rid)
+    expect(rids).toEqual(['RID-REAL-001'])
+  })
+
+  it('does not count a RID that appears only in a comment (phantom guard)', async () => {
+    const dir = join(tmpdir(), `specdrive-scan-phantom-${Date.now()}`)
+    const specDir = join(dir, 'ph-spec')
+    await mkdir(specDir, { recursive: true })
+    await writeFile(
+      join(specDir, 'ph.feature'),
+      `Feature: Phantom RID
+
+  # see @RID-PHANTOM-001 for rationale (never a real tag)
+  @RID-REAL-001
+  Scenario: Only the real tag counts
+    Given a step
+`
+    )
+
+    const rids = (await scanFeatureFiles(dir, 'ph-spec')).map((e) => e.rid)
+    expect(rids).toEqual(['RID-REAL-001'])
+    expect(rids).not.toContain('RID-PHANTOM-001')
+  })
+
   it('scans nested subdirectories', async () => {
     const nestedDir = join(tmpdir(), `specdrive-scan-nested-${Date.now()}`)
     const subDir = join(nestedDir, 'nested-spec', 'sub', 'deep')

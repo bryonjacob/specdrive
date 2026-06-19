@@ -69,6 +69,11 @@ same RID tag is repeated within a single scenario (no intervening `Scenario:` /
 `Scenario Outline:` boundary), which is a redundant tag with no traceability
 value.
 
+Only genuine Gherkin **tag lines** count as RID occurrences (a trimmed line of
+whitespace-separated `@`-prefixed tokens). RIDs mentioned in `#` comments, step
+text, or inside `"""` docstrings are intentionally ignored — writing a RID in a
+provenance comment is normal practice, not a tag.
+
 ### `specdrive verify`
 
 Cross-reference declared RIDs against a JUnit XML test report. Shows coverage percentage and lists uncovered RIDs with source locations.

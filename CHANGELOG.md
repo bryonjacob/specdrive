@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-06-19
+
+### Fixed
+
+- **scan: only harvest @RID tags from genuine Gherkin tag lines; ignore RIDs mentioned in comments or inside `"""` docstrings (previously counted as occurrences/false duplicates).** A line yields @RID tags only when, after trimming, it consists solely of whitespace-separated `@`-prefixed tokens and is not inside a `"""` / ` ``` ` docstring block. RIDs written in `#` comments, step text, table rows, or `//`-style comments inside embedded source fixtures are no longer treated as tag occurrences. This also removes phantom RIDs (mentioned only in comments) from the declared-RID count. Surfaced by the 0.2.0 scenario-aware grouping, which exposed comment-mentions as false same-scenario duplicates.
+
 ## [0.2.0] - 2026-06-19
 
 ### Changed

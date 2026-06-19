@@ -225,17 +225,16 @@ describe('runAudit duplicate semantics (many-to-many)', () => {
     expect(result.errors.some((e) => e.includes('Duplicate RID'))).toBe(true)
   })
 
-  it('flags the same RID repeated within one scenario body', async () => {
-    // Both occurrences sit inside the same scenario block (no intervening
-    // Scenario: line between them), so they are a genuine same-scenario repeat.
-    const result = await auditWithLocalFeatures('scenario-body', {
+  it('flags the same RID on two tag lines above one scenario', async () => {
+    // Two stacked tag lines belong to the same scenario block (no intervening
+    // Scenario: line between them), so the repeat is a genuine duplicate.
+    const result = await auditWithLocalFeatures('stacked-tags', {
       'a.feature': `Feature: A
 
-  Scenario: Tagged twice in body
-    # @RID-COV-001
-    Given a step
-    # stray re-tag, no intervening Scenario: @RID-COV-001
-    Then done
+  @RID-COV-001
+  @RID-COV-001
+  Scenario: Redundantly tagged across two lines
+    Given a
 `,
     })
     expect(result.duplicates).toHaveLength(1)
@@ -249,6 +248,27 @@ describe('runAudit duplicate semantics (many-to-many)', () => {
   @RID-COV-001 @RID-COV-002
   Scenario: Proves two requirements
     Given a
+`,
+    })
+    expect(result.duplicates).toEqual([])
+    expect(result.errors).toEqual([])
+  })
+
+  it('does not flag a comment-mention sitting above the real tag for the same RID', async () => {
+    // The ProvableCode crates shape: a provenance comment names a RID directly
+    // above the genuine tag for that same RID, within one scenario block.
+    // Pre-0.2.1 this was a false same-scenario duplicate.
+    const result = await auditWithLocalFeatures('comment-above-tag', {
+      'cli.feature': `Feature: CLI
+
+  # directory (\`@RID-RS-CONFIG-7D-002\`). The check command reads it.
+  @RID-RS-CONFIG-7D-002 @RID-RS-CLI-CHECK-7D-001
+  Scenario: Check command
+    Given a config directory
+    """
+    // Sub-phase 9.3-5 (@RID-RS-CLI-935-003, frame half) of the encoder
+    """
+    Then it validates
 `,
     })
     expect(result.duplicates).toEqual([])
