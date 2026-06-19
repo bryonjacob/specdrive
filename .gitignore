@@ -10,3 +10,4 @@ sbom.xml
 .idea/
 *.swp
 *.log
+.npmrc
